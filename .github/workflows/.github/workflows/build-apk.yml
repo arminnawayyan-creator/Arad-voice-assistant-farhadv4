@@ -1,0 +1,44 @@
+
+name: Build ARAD Android APK
+
+on:
+  workflow_dispatch:
+  push:
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      - name: Extract ARAD source
+        shell: bash
+        run: |
+          if [ -f "ARAD_MIC_FIX_SOURCE.zip" ]; then
+            unzip -o ARAD_MIC_FIX_SOURCE.zip -d .
+          fi
+          test -f settings.gradle
+          test -f app/build.gradle
+
+      - name: Set up Java 17
+        uses: actions/setup-java@v4
+        with:
+          distribution: temurin
+          java-version: "17"
+
+      - name: Set up Gradle
+        uses: gradle/actions/setup-gradle@v4
+        with:
+          gradle-version: "8.9"
+
+      - name: Build APK
+        run: gradle --no-daemon assembleDebug
+
+      - name: Upload APK
+        uses: actions/upload-artifact@v4
+        with:
+          name: ARAD-Android-APK
+          path: app/build/outputs/apk/debug/*.apk
+          if-no-files-found: error
